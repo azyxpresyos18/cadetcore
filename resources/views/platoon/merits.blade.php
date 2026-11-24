@@ -1,4 +1,11 @@
 @extends('layouts.app')
+@php
+  // Platoon merit / demerit data. The backend passes these; nothing is hardcoded here.
+  // $cadets  : list of cadet names for the dropdown
+  // $entries : rows of [entry id, date, cadet, 'Merit'|'Demerit', points (unsigned int), reason, logged by]
+  $cadets = $cadets ?? [];
+  $entries = $entries ?? [];
+@endphp
 @section('role', 'platoon_leader')
 @section('title', 'Merit / Demerit')
 @section('heading', 'Merit / Demerit')
@@ -14,13 +21,6 @@
     ['Not prescribed pants',3],['White socks',3],['Not prescribed shoes',3],['Dangling shoelace',3],
     ['Improper placement of shoelaces',2],['Improper folding of handkerchief',2],['Cramped handkerchief',2],
   ];
-  // SAMPLE DATA: replace with database queries later.
-  $cadets = ['Reyes, Marco A.','Santos, Maria L.','Perez, Ken D.','Lim, Jose R.','Tan, Ana C.'];
-  $entries = [
-    ['M-0041','2026-09-10','Santos, Maria L.','Merit',8,'Outstanding performance in drill','Lt. Dela Cruz'],
-    ['M-0040','2026-09-10','Reyes, Marco A.','Demerit',3,'Late arrival to formation','Lt. Dela Cruz'],
-    ['M-0029','2026-09-03','Perez, Ken D.','Merit',4,'Helped organize equipment','Lt. Dela Cruz'],
-  ];
 @endphp
 <div id="msg"></div>
 <div class="filters">
@@ -29,11 +29,13 @@
 <div class="tablewrap"><table id="tbl">
   <thead><tr><th>Entry ID</th><th>Date</th><th>Cadet</th><th>Type</th><th>Points</th><th>Reason</th><th>Logged by</th></tr></thead>
   <tbody>
-  @foreach ($entries as $e)
+  @forelse ($entries as $e)
     <tr data-type="{{ strtolower($e[3]) }}"><td>{{ $e[0] }}</td><td>{{ $e[1] }}</td><td>{{ $e[2] }}</td>
       <td><span class="badge b-{{ strtolower($e[3]) }}">{{ $e[3] }}</span></td>
       <td class="{{ $e[3] === 'Merit' ? 'pos' : 'neg' }}">{{ $e[3] === 'Merit' ? '+' : '-' }}{{ $e[4] }}</td><td>{{ $e[5] }}</td><td>{{ $e[6] }}</td></tr>
-  @endforeach
+  @empty
+    <tr><td colspan="7">No merit or demerit entries for your platoon yet.</td></tr>
+  @endforelse
   </tbody></table></div>
 
 <dialog id="logDlg" style="width:min(560px,94vw)">
@@ -67,7 +69,7 @@
 @push('scripts')
 <script>
 const $ = id => document.getElementById(id);
-let n = 42;
+const ME = @json(session('display_name'));
 document.querySelectorAll('.pill').forEach(p => p.onclick = () => {
   document.querySelectorAll('.pill').forEach(x => x.classList.remove('on')); p.classList.add('on');
   document.querySelectorAll('#tbl tbody tr').forEach(r => r.classList.toggle('hide', p.dataset.f !== 'all' && r.dataset.type !== p.dataset.f));
@@ -96,9 +98,9 @@ $('logForm').addEventListener('submit', e => {
     pts = on.reduce((s, c) => s + +c.dataset.pts, 0);
     reason = on.map(c => c.value).join('; ') + ($('l_remarks').value.trim() ? ' (' + $('l_remarks').value.trim() + ')' : '');
   } else { pts = $('l_pts').value; reason = $('l_reason').value; }
-  const by = $('l_sub').checked ? $('l_subname').value + ' (substitute)' : 'Lt. Dela Cruz';
+  const by = $('l_sub').checked ? $('l_subname').value + ' (substitute)' : ME;
   const tr = document.createElement('tr'); tr.dataset.type = t.toLowerCase();
-  tr.innerHTML = `<td>M-00${n++}</td><td>${new Date().toISOString().slice(0, 10)}</td><td>${esc($('l_cadet').value)}</td><td><span class="badge b-${t.toLowerCase()}">${t}</span></td><td class="${t === 'Merit' ? 'pos' : 'neg'}">${t === 'Merit' ? '+' : '-'}${pts}</td><td>${esc(reason)}</td><td>${esc(by)}</td>`;
+  tr.innerHTML = `<td>(new)</td><td>${new Date().toISOString().slice(0, 10)}</td><td>${esc($('l_cadet').value)}</td><td><span class="badge b-${t.toLowerCase()}">${t}</span></td><td class="${t === 'Merit' ? 'pos' : 'neg'}">${t === 'Merit' ? '+' : '-'}${pts}</td><td>${esc(reason)}</td><td>${esc(by)}</td>`;
   document.querySelector('#tbl tbody').prepend(tr);
   $('msg').innerHTML = '<div class="alert ok">Entry saved. The reason is attached to the cadet\'s record.</div>';
   $('logForm').reset(); $('l_subbox').classList.add('hide'); syncType(); syncTotal();

@@ -1,13 +1,7 @@
-{{-- Usage: @include('partials.calendar', ['editable' => true|false]) --}}
+{{-- Usage: @include('partials.calendar', ['editable' => true|false]); expects $sessions from the controller. --}}
 @php
-  $sessions = [
-    ['id'=>1,'date'=>'2026-09-06','title'=>'Drill Day 4','time'=>'06:00 - 11:00','location'=>'Parade Ground','battalion'=>'All Battalions','audience'=>'All Cadets','type'=>'Drill'],
-    ['id'=>2,'date'=>'2026-09-13','title'=>'Drill Day 5','time'=>'06:00 - 11:00','location'=>'Parade Ground','battalion'=>'1st Battalion','audience'=>'All Cadets','type'=>'Drill'],
-    ['id'=>3,'date'=>'2026-09-19','title'=>'Field Exercise','time'=>'05:00 - 15:00','location'=>'Training Site','battalion'=>'All Battalions','audience'=>'Aspiring Officers','type'=>'Field Exercise'],
-    ['id'=>4,'date'=>'2026-09-27','title'=>'PT Assessment','time'=>'06:00 - 09:00','location'=>'Oval','battalion'=>'All Battalions','audience'=>'All Cadets','type'=>'Physical'],
-    ['id'=>5,'date'=>'2026-10-04','title'=>'Leadership Seminar','time'=>'09:00 - 12:00','location'=>'Conference Rm.','battalion'=>'All Battalions','audience'=>'Aspiring Officers','type'=>'Academic'],
-    ['id'=>6,'date'=>'2026-10-11','title'=>'Drill Day 6','time'=>'06:00 - 11:00','location'=>'Parade Ground','battalion'=>'All Battalions','audience'=>'All Cadets','type'=>'Drill'],
-  ];
+  // $sessions: rows of ['id','date'=>'Y-m-d','title','time'=>'06:00 - 11:00','location','audience','type'], passed by the backend.
+  $sessions = $sessions ?? [];
 @endphp
 <div class="grid2">
   <div class="card">
@@ -42,7 +36,7 @@
 <script>
 const EDITABLE = @json($editable);
 let sessions = @json($sessions);
-let view = new Date(2026, 8, 1), selected = null, editingId = null;
+let view = new Date(); view.setDate(1); let selected = null, editingId = null;
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
 const key = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
@@ -68,7 +62,7 @@ function render() {
   $('cal').innerHTML = html;
   document.querySelectorAll('.day[data-d]').forEach(el => el.onclick = () => { selected = el.dataset.d; render(); showDetail(); });
   const up = [...sessions].sort((a, b) => a.date.localeCompare(b.date));
-  $('upcoming').innerHTML = up.map(s => `<div class="upc"><div class="d">${+s.date.slice(8)}</div><div><strong>${s.title}</strong><br><small style="color:var(--muted)">${s.location} &middot; ${s.audience}</small></div></div>`).join('') || '<p>No sessions.</p>';
+  $('upcoming').innerHTML = up.map(s => `<div class="upc"><div class="d">${+s.date.slice(8)}</div><div><strong>${s.title}</strong><br><small style="color:var(--muted)">${s.location} &middot; ${s.audience}</small></div></div>`).join('') || '<p style="color:var(--muted)">No sessions scheduled.</p>';
 }
 
 function showDetail() {
@@ -77,10 +71,8 @@ function showDetail() {
   if (!ev.length) html += '<p style="color:var(--muted)">No session scheduled.</p>';
   ev.forEach(s => {
     html += `<div class="kv"><strong style="font-size:16px">${s.title}</strong></div>
-      <div class="kv"><span class="label">Type</span>${esc(s.type)}</div>
       <div class="kv"><span class="label">Time</span>${s.time}</div>
       <div class="kv"><span class="label">Location</span>${s.location}</div>
-      <div class="kv"><span class="label">Battalion</span>${s.battalion}</div>
       <div class="kv"><span class="label">Audience</span>${s.audience}</div>`;
     if (EDITABLE) html += `<div class="dlg-actions" style="justify-content:flex-start"><button class="btn" onclick="editSession(${s.id})">Edit</button><button class="btn danger" onclick="removeSession(${s.id})">Remove</button></div>`;
   });
@@ -97,7 +89,7 @@ if (EDITABLE) {
   window.removeSession = id => { if (confirm('Remove this session?')) { sessions = sessions.filter(s => s.id !== id); render(); showDetail(); } };
   $('sessForm').addEventListener('submit', e => {
     if (e.submitter && e.submitter.value !== 'save') return;
-    const data = {title:$('s_title').value, date:$('s_date').value, time:$('s_time').value, location:$('s_loc').value, type:$('s_type').value.trim(), audience:$('s_aud').value, battalion:'All Battalions'};
+    const data = {title:$('s_title').value, date:$('s_date').value, time:$('s_time').value, location:$('s_loc').value, type:$('s_type').value.trim(), audience:$('s_aud').value};
     if (editingId) Object.assign(sessions.find(s => s.id === editingId), data);
     else sessions.push({id: Date.now(), ...data});
     selected = data.date; view = new Date(data.date + 'T00:00'); view.setDate(1); render(); showDetail();
