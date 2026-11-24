@@ -1,12 +1,11 @@
 @php
   $role = $role ?? trim($__env->yieldContent('role', 'adjutant'));
   $labels = ['adjutant'=>'Corps Adjutant','corps_s1'=>'Corps S1 Personnel Officer','battalion_s1'=>'Battalion S1 Officer','platoon_leader'=>'Platoon Leader','cadet'=>'Cadet'];
-  $names = ['adjutant'=>'Corps Adjutant','corps_s1'=>'Corps S1','battalion_s1'=>'1st Battalion S1','platoon_leader'=>'Lt. Dela Cruz','cadet'=>'Marco A. Reyes'];
   $prefixes = ['adjutant'=>'adjutant','corps_s1'=>'corps','battalion_s1'=>'battalion','platoon_leader'=>'platoon','cadet'=>'cadet'];
   $pages = ['dashboard'=>'Dashboard','schedule'=>'Training Schedule','merits'=>'Merit / Demerit','cadets'=>'Cadet Records','attendance'=>'Attendance','reports'=>'Reports','yearly'=>'Yearly Update'];
   $staff = ['dashboard','schedule','merits','cadets','attendance','reports'];
   $sets = ['adjutant'=>array_merge($staff, ['yearly']),'corps_s1'=>$staff,'battalion_s1'=>$staff,'platoon_leader'=>['dashboard','schedule','attendance','merits'],'cadet'=>['attendance','schedule','merits']];
-  $roleLabel = $labels[$role]; $name = $names[$role]; $prefix = $prefixes[$role];
+  $roleLabel = $labels[$role]; $name = session('display_name') ?? $labels[$role]; $prefix = $prefixes[$role];
   $nav = [];
   foreach ($sets[$role] as $pg) { $nav[] = [$prefix.'.'.$pg, ($role === 'cadet' && $pg === 'merits') ? 'Merit & Demerit' : $pages[$pg]]; }
 @endphp

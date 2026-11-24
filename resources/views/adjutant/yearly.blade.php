@@ -1,20 +1,30 @@
 @extends('layouts.app')
+@php
+  // Yearly update data. The backend passes these; nothing is hardcoded here.
+  // $officers : rows of [name, serial no, position, unit]
+  // $groups   : rows of ['n'=>count, 'label'=>'Regular Cadet cadets enrolled this year']
+  // $nextLabel: e.g. '2027-2028'
+  $yearLabel = $yearLabel ?? null;
+  $officers = $officers ?? [];
+  $groups = $groups ?? [];
+  $groupTotal = $groupTotal ?? 0;
+  $nextLabel = $nextLabel ?? 'next academic year';
+  $battalions = $battalions ?? [];
+  $companies = $companies ?? [];
+  $platoons = $platoons ?? [];
+@endphp
 @section('role', 'adjutant')
 @section('title', 'Yearly Update')
 @section('heading', 'Prepare Yearly Update')
-@section('subtitle', 'Controlled rollover workflow · Current AY 2026-2027')
+@section('subtitle', 'Controlled rollover workflow'.($yearLabel ? ' · Current AY '.$yearLabel : ''))
 @section('actions')<a class="btn ghost" href="{{ route('adjutant.years') }}">&#128274; View Academic Years</a>@endsection
 @section('content')
-@php
-  // SAMPLE DATA: replace with database queries later.
-  $officers = [['Santos, Maria L.','CE-R23-000101','Platoon Leader','1st Bn'],['Dela Cruz, Pedro','CE-R23-000102','Battalion S1','1st Bn'],['Ramos, Luis','CE-R24-000103','Platoon Leader','2nd Bn'],['Garcia, Ana','CE-R24-000104','Battalion S1','3rd Bn']];
-@endphp
 <div class="y-banner"><strong>Records are never deleted during rollover.</strong>
   <p>Graduating cadets and outgoing officers are moved to the read-only archive with their attendance, merit, demerit, and audit history intact.</p></div>
 
 <div class="y-wrap">
   <ol class="y-steps" id="ySteps">
-    <li data-s="1" class="on"><i>1</i><div><b>Review graduating records</b><small id="sub1">49 records identified</small></div></li>
+    <li data-s="1" class="on"><i>1</i><div><b>Review graduating records</b><small id="sub1">{{ $groupTotal }} records identified</small></div></li>
     <li data-s="2"><i>2</i><div><b>Import new cadets</b><small id="sub2">Add cadets and validate</small></div></li>
     <li data-s="3"><i>3</i><div><b>Update officer accounts</b><small>Assign roles and unit access</small></div></li>
     <li data-s="4"><i>4</i><div><b>Start academic year</b><small>Confirm and activate</small></div></li>
@@ -24,11 +34,13 @@
     {{-- STEP 1 --}}
     <section data-step="1">
       <h3>Archive graduating cadets and officers</h3>
-      <p class="y-hint">Review the records identified for AY 2026-2027 before archiving.</p>
+      <p class="y-hint">Review the records identified for AY {{ $yearLabel ?? 'the current year' }} before archiving.</p>
       <div class="y-check">
-        <label><input type="checkbox" class="grad" data-n="18" checked><span>18 graduating regular cadets</span><em>Ready</em></label>
-        <label><input type="checkbox" class="grad" data-n="25" checked><span>25 graduating aspiring officers</span><em>Ready</em></label>
-        <label><input type="checkbox" class="grad" data-n="6" checked><span>6 outgoing officer accounts</span><em>Ready</em></label>
+        @forelse ($groups as $g)
+          <label><input type="checkbox" class="grad" data-n="{{ $g['n'] }}" checked><span>{{ $g['n'] }} {{ $g['label'] }}</span><em>Ready</em></label>
+        @empty
+          <p class="y-hint">There are no enrolled cadets or officers in the current academic year to archive.</p>
+        @endforelse
       </div>
       <div id="e1"></div>
       <div class="y-actions"><button class="btn ghost" disabled>Back</button><button class="btn" onclick="next(1)">Save &amp; continue</button></div>
@@ -41,9 +53,9 @@
       <form id="addForm" class="y-form">
         <label class="f"><span>Full name</span><input id="a_name" placeholder="Surname, First Name M." required></label>
         <label class="f"><span>Serial number</span><input id="a_sn" placeholder="CE-R25-002444" required pattern="CE-[A-Z]\d{2}-\d{6}" title="Format: CE-R25-002444"></label>
-        <label class="f"><span>Battalion</span><select id="a_bn" required><option value="">Select...</option><option>1st Bn</option><option>2nd Bn</option><option>3rd Bn</option></select></label>
-        <label class="f"><span>Company</span><select id="a_co" required><option value="">Select...</option><option>Alpha Co</option><option>Bravo Co</option></select></label>
-        <label class="f"><span>Platoon</span><select id="a_pl" required><option value="">Select...</option><option>Plt 1</option><option>Plt 2</option><option>Plt 3</option></select></label>
+        <label class="f"><span>Battalion</span><select id="a_bn" required><option value="">Select...</option>@foreach ($battalions as $o)<option>{{ $o }}</option>@endforeach</select></label>
+        <label class="f"><span>Company</span><select id="a_co" required><option value="">Select...</option>@foreach ($companies as $o)<option>{{ $o }}</option>@endforeach</select></label>
+        <label class="f"><span>Platoon</span><select id="a_pl" required><option value="">Select...</option>@foreach ($platoons as $o)<option>{{ $o }}</option>@endforeach</select></label>
         <label class="f"><span>Course and year</span><input id="a_cy" placeholder="e.g. BSIT-1" required></label>
         <div class="full"><button class="btn" type="submit">Validate &amp; add cadet</button></div>
       </form>
@@ -58,9 +70,11 @@
       <h3>Update officer accounts</h3>
       <p class="y-hint">Keep, replace or deactivate current officers, and add new officer accounts for the incoming year.</p>
       <div class="tablewrap"><table id="offTbl"><thead><tr><th>Name</th><th>Serial No.</th><th>Position</th><th>Unit</th><th>Action</th></tr></thead><tbody>
-      @foreach ($officers as $o)
+      @forelse ($officers as $o)
         <tr><td class="oname" data-orig="{{ $o[0] }}">{{ $o[0] }}</td><td class="osn" data-orig="{{ $o[1] }}">{{ $o[1] }}</td><td>{{ $o[2] }}</td><td>{{ $o[3] }}</td><td><select class="offAct" style="width:auto"><option>Keep</option><option>Replace</option><option>Deactivate</option></select></td></tr>
-      @endforeach</tbody></table></div>
+      @empty
+        <tr><td colspan="5">No officer positions are assigned for the current academic year.</td></tr>
+      @endforelse</tbody></table></div>
       <button class="btn ghost" style="margin:12px 0" onclick="officerDlg.showModal()">+ Add officer account</button>
       <div id="e3"></div>
       <div class="y-actions"><button class="btn ghost" onclick="go(2)">Back</button><button class="btn" onclick="next(3)">Save &amp; continue</button></div>
@@ -70,7 +84,7 @@
     <section data-step="4" class="hide">
       <h3>Start academic year</h3>
       <p class="y-hint">The previous year is archived (read-only) and the new year becomes the active year.</p>
-      <div class="y-new"><small>NEW ACADEMIC YEAR</small><div class="big">AY 2027-2028 · Semester 1</div><p id="sum"></p></div>
+      <div class="y-new"><small>NEW ACADEMIC YEAR</small><div class="big">AY {{ $nextLabel }}</div><p id="sum"></p></div>
       <div id="e4"></div>
       <div class="y-actions"><button class="btn ghost" onclick="go(3)">Back</button><button class="btn" onclick="confirmYear()">Confirm yearly update</button></div>
     </section>
@@ -83,9 +97,9 @@
     <label class="f"><span>Full name</span><input id="o_name" placeholder="Surname, First Name M." required></label>
     <label class="f"><span>Serial number</span><input id="o_sn" pattern="CE-[A-Z]\d{2}-\d{6}" title="Format: CE-R25-002444" placeholder="CE-R25-002444" required></label>
     <label class="f"><span>Position</span><select id="o_pos" required><option value="">Select...</option><option>Platoon Leader</option><option>Battalion S1</option><option>Corps S1</option><option>Corps Adjutant</option></select></label>
-    <label class="f hide" id="w_bn"><span>Battalion</span><select id="o_bn"><option value="">Select...</option><option>1st Bn</option><option>2nd Bn</option><option>3rd Bn</option></select></label>
-    <label class="f hide" id="w_co"><span>Company</span><select id="o_co"><option value="">Select...</option><option>Alpha Co</option><option>Bravo Co</option></select></label>
-    <label class="f hide" id="w_pl"><span>Platoon</span><select id="o_pl"><option value="">Select...</option><option>1st Plt</option><option>2nd Plt</option><option>3rd Plt</option></select></label>
+    <label class="f hide" id="w_bn"><span>Battalion</span><select id="o_bn"><option value="">Select...</option>@foreach ($battalions as $o)<option>{{ $o }}</option>@endforeach</select></label>
+    <label class="f hide" id="w_co"><span>Company</span><select id="o_co"><option value="">Select...</option>@foreach ($companies as $o)<option>{{ $o }}</option>@endforeach</select></label>
+    <label class="f hide" id="w_pl"><span>Platoon</span><select id="o_pl"><option value="">Select...</option>@foreach ($platoons as $o)<option>{{ $o }}</option>@endforeach</select></label>
     <div class="dlg-actions"><button type="button" class="btn ghost" style="color:var(--ink);border-color:var(--ink)" onclick="officerDlg.close()">Cancel</button><button class="btn" value="save">Add officer</button></div>
   </form>
 </dialog>
@@ -103,7 +117,7 @@
 
 <dialog id="doneDlg">
   <h3>Yearly update ready</h3>
-  <div class="alert ok">AY 2027-2028 has been prepared.<br><small style="font-weight:400">The prior year is archived, new cadets are staged, and role-based officer accounts are ready.</small></div>
+  <div class="alert ok">AY {{ $nextLabel }} has been prepared.<br><small style="font-weight:400">The prior year is archived, new cadets are staged, and role-based officer accounts are ready.</small></div>
   <div class="dlg-actions"><a class="btn" href="{{ route('adjutant.years') }}">View Academic Years</a><button class="btn ghost" style="color:var(--ink);border-color:var(--ink)" onclick="doneDlg.close()">Done</button></div>
 </dialog>
 @endsection
