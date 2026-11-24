@@ -37,7 +37,7 @@
       <p class="y-hint">Review the records identified for AY {{ $yearLabel ?? 'the current year' }} before archiving.</p>
       <div class="y-check">
         @forelse ($groups as $g)
-          <label><input type="checkbox" class="grad" data-n="{{ $g['n'] }}" checked><span>{{ $g['n'] }} {{ $g['label'] }}</span><em>Ready</em></label>
+          <label><input type="checkbox" class="grad" data-n="{{ $g['n'] }}" data-key="{{ $g['key'] }}" checked><span>{{ $g['n'] }} {{ $g['label'] }}</span><em>Ready</em></label>
         @empty
           <p class="y-hint">There are no enrolled cadets or officers in the current academic year to archive.</p>
         @endforelse
@@ -53,10 +53,10 @@
       <form id="addForm" class="y-form">
         <label class="f"><span>Full name</span><input id="a_name" placeholder="Surname, First Name M." required></label>
         <label class="f"><span>Serial number</span><input id="a_sn" placeholder="CE-R25-002444" required pattern="CE-[A-Z]\d{2}-\d{6}" title="Format: CE-R25-002444"></label>
-        <label class="f"><span>Battalion</span><select id="a_bn" required><option value="">Select...</option>@foreach ($battalions as $o)<option>{{ $o }}</option>@endforeach</select></label>
-        <label class="f"><span>Company</span><select id="a_co" required><option value="">Select...</option>@foreach ($companies as $o)<option>{{ $o }}</option>@endforeach</select></label>
-        <label class="f"><span>Platoon</span><select id="a_pl" required><option value="">Select...</option>@foreach ($platoons as $o)<option>{{ $o }}</option>@endforeach</select></label>
-        <label class="f"><span>Course and year</span><input id="a_cy" placeholder="e.g. BSIT-1" required></label>
+        <label class="f"><span>Battalion</span><select id="a_bn" required><option value="">Select...</option></select></label>
+        <label class="f"><span>Company</span><select id="a_co" required><option value="">Select...</option></select></label>
+        <label class="f"><span>Platoon</span><select id="a_pl" required><option value="">Select...</option></select></label>
+        <label class="f"><span>Course and year level</span><input id="a_cy" maxlength="150" placeholder="e.g. Bachelor of Science in Information Systems-1" required></label>
         <div class="full"><button class="btn" type="submit">Validate &amp; add cadet</button></div>
       </form>
       <div id="e2"></div>
@@ -71,7 +71,7 @@
       <p class="y-hint">Keep, replace or deactivate current officers, and add new officer accounts for the incoming year.</p>
       <div class="tablewrap"><table id="offTbl"><thead><tr><th>Name</th><th>Serial No.</th><th>Position</th><th>Unit</th><th>Action</th></tr></thead><tbody>
       @forelse ($officers as $o)
-        <tr><td class="oname" data-orig="{{ $o[0] }}">{{ $o[0] }}</td><td class="osn" data-orig="{{ $o[1] }}">{{ $o[1] }}</td><td>{{ $o[2] }}</td><td>{{ $o[3] }}</td><td><select class="offAct" style="width:auto"><option>Keep</option><option>Replace</option><option>Deactivate</option></select></td></tr>
+        <tr><td class="oname" data-orig="{{ $o[0] }}">{{ $o[0] }}</td><td class="osn" data-orig="{{ $o[1] }}">{{ $o[1] }}</td><td>{{ $o[2] }}</td><td>{{ $o[3] }}</td><td><select class="offAct" data-key="{{ $o[4] }}" style="width:auto"><option>Keep</option><option>Replace</option><option>Deactivate</option></select></td></tr>
       @empty
         <tr><td colspan="5">No officer positions are assigned for the current academic year.</td></tr>
       @endforelse</tbody></table></div>
@@ -97,9 +97,9 @@
     <label class="f"><span>Full name</span><input id="o_name" placeholder="Surname, First Name M." required></label>
     <label class="f"><span>Serial number</span><input id="o_sn" pattern="CE-[A-Z]\d{2}-\d{6}" title="Format: CE-R25-002444" placeholder="CE-R25-002444" required></label>
     <label class="f"><span>Position</span><select id="o_pos" required><option value="">Select...</option><option>Platoon Leader</option><option>Battalion S1</option><option>Corps S1</option><option>Corps Adjutant</option></select></label>
-    <label class="f hide" id="w_bn"><span>Battalion</span><select id="o_bn"><option value="">Select...</option>@foreach ($battalions as $o)<option>{{ $o }}</option>@endforeach</select></label>
-    <label class="f hide" id="w_co"><span>Company</span><select id="o_co"><option value="">Select...</option>@foreach ($companies as $o)<option>{{ $o }}</option>@endforeach</select></label>
-    <label class="f hide" id="w_pl"><span>Platoon</span><select id="o_pl"><option value="">Select...</option>@foreach ($platoons as $o)<option>{{ $o }}</option>@endforeach</select></label>
+    <label class="f hide" id="w_bn"><span>Battalion</span><select id="o_bn"><option value="">Select...</option></select></label>
+    <label class="f hide" id="w_co"><span>Company</span><select id="o_co"><option value="">Select...</option></select></label>
+    <label class="f hide" id="w_pl"><span>Platoon</span><select id="o_pl"><option value="">Select...</option></select></label>
     <div class="dlg-actions"><button type="button" class="btn ghost" style="color:var(--ink);border-color:var(--ink)" onclick="officerDlg.close()">Cancel</button><button class="btn" value="save">Add officer</button></div>
   </form>
 </dialog>
@@ -117,14 +117,18 @@
 
 <dialog id="doneDlg">
   <h3>Yearly update ready</h3>
-  <div class="alert ok">AY {{ $nextLabel }} has been prepared.<br><small style="font-weight:400">The prior year is archived, new cadets are staged, and role-based officer accounts are ready.</small></div>
+  <div class="alert ok">AY {{ $nextLabel }} has been prepared.<br><small style="font-weight:400">The prior year is archived, new cadets are enrolled, and role-based officer accounts are ready.</small></div>
+  <div id="tempPw"></div>
   <div class="dlg-actions"><a class="btn" href="{{ route('adjutant.years') }}">View Academic Years</a><button class="btn ghost" style="color:var(--ink);border-color:var(--ink)" onclick="doneDlg.close()">Done</button></div>
 </dialog>
 @endsection
 @push('scripts')
+@include('partials.cascade')
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+cascade(a_bn, a_co, a_pl, @json($structure ?? []));
+cascade(o_bn, o_co, o_pl, @json($structure ?? []));
 let cur = 1, newOfficers = [], staged = [], finished = false;
 function go(n) {
   cur = n;
@@ -153,7 +157,7 @@ $('addForm').addEventListener('submit', e => {
   e.preventDefault();
   const sn = a_sn.value.trim();
   if (staged.some(c => c.sn === sn)) { $('e2').innerHTML = '<div class="alert err">Duplicate serial number: this cadet is already staged.</div>'; return; }
-  // DEMO ONLY: also check against existing cadet records on the server.
+  // Duplicates against existing cadet records are checked by the server when the update is confirmed.
   staged.push({sn, name: a_name.value.trim(), bn: a_bn.value, co: a_co.value, pl: a_pl.value, cy: a_cy.value.trim()});
   $('e2').innerHTML = `<div class="alert ok">Cadet ${esc(a_name.value)} was added successfully.</div>`;
   e.target.reset(); renderStage();
@@ -176,7 +180,7 @@ $('officerForm').addEventListener('submit', e => {
   const pos = o_pos.value, unit = [o_bn.value, o_co.value, o_pl.value].filter(Boolean);
   const sn = o_sn.value.trim();
   if (snTaken(sn)) { e.preventDefault(); alert('Duplicate serial number: this serial number is already used in this update.'); return; }
-  const o = {name: o_name.value.trim(), sn, pos, unit: unit.join(' · ') || 'Corps level'}; newOfficers.push(o);
+  const o = {name: o_name.value.trim(), sn, pos, bn: o_bn.value, co: o_co.value, pl: o_pl.value, unit: unit.join(' · ') || 'Corps level'}; newOfficers.push(o);
   $('offTbl').querySelector('tbody').insertAdjacentHTML('beforeend', `<tr><td>${esc(o.name)} <span class="badge b-good">New</span></td><td>${esc(sn)}</td><td>${pos}</td><td>${esc(o.unit)}</td><td>Add</td></tr>`);
   $('officerForm').reset(); syncPos();
 });
@@ -187,7 +191,8 @@ const snTaken = sn => staged.some(c => c.sn === sn) || newOfficers.some(o => o.s
 // Replace: ask who is being appointed to that position
 let repSel = null;
 function restore(tr) { const c = tr.querySelector('.oname'), n = tr.querySelector('.osn'); c.textContent = c.dataset.orig; n.textContent = n.dataset.orig; n.dataset.cur = ''; }
-function revert(sel) { sel.value = 'Keep'; restore(sel.closest('tr')); sel.dataset.prev = 'Keep'; }
+function clearRep(sel) { delete sel.dataset.repName; delete sel.dataset.repSn; }
+function revert(sel) { sel.value = 'Keep'; restore(sel.closest('tr')); sel.dataset.prev = 'Keep'; clearRep(sel); }
 document.querySelectorAll('.offAct').forEach(sel => {
   sel.dataset.prev = 'Keep';
   sel.onchange = () => {
@@ -196,7 +201,7 @@ document.querySelectorAll('.offAct').forEach(sel => {
       repSel = sel; rep_name.value = '';
       $('rep_err').innerHTML = ''; rep_info.textContent = `Position: ${tr.children[2].textContent} (${tr.children[3].textContent}). Current officer: ${c.dataset.orig}.`;
       replaceDlg.showModal();
-    } else { restore(tr); sel.dataset.prev = sel.value; }
+    } else { restore(tr); sel.dataset.prev = sel.value; clearRep(sel); }
   };
 });
 $('repCancel').onclick = () => { if (repSel) revert(repSel); replaceDlg.close(); };
@@ -207,7 +212,7 @@ $('replaceForm').addEventListener('submit', e => {
   if (snTaken(sn)) { e.preventDefault(); $('rep_err').innerHTML = '<div class="alert err">Duplicate serial number: already used in this update.</div>'; return; }
   c.innerHTML = `${esc(rep_name.value.trim())} <span class="badge b-good">New</span><br><small style="opacity:.75">replaces ${esc(c.dataset.orig)}</small>`;
   n.textContent = sn; n.dataset.cur = 'replaced';
-  repSel.dataset.prev = 'Replace'; repSel = null; $('replaceForm').reset();
+  repSel.dataset.prev = 'Replace'; repSel.dataset.repName = rep_name.value.trim(); repSel.dataset.repSn = sn; repSel = null; $('replaceForm').reset();
 });
 
 /* step 4 */
@@ -215,11 +220,27 @@ function summary() {
   const deact = [...document.querySelectorAll('.offAct')].filter(s => s.value !== 'Keep').length;
   $('sum').textContent = `${gradCount()} records will be archived · ${staged.length} new cadets · ${newOfficers.length} new officer accounts · ${deact} existing officer accounts changed.`;
 }
-function confirmYear() {
+const YEARLY_URL = @json(url()->current());
+async function confirmYear() {
   if (finished) return;
-  // DEMO ONLY: POST the whole rollover (archive + staged cadets + officer changes) in one transaction.
-  finished = true; doneDlg.showModal();
-  document.querySelector('[data-step="4"] .y-actions .btn:not(.ghost)').textContent = 'Yearly update confirmed';
+  const btn = document.querySelector('[data-step="4"] .y-actions .btn:not(.ghost)');
+  $('e4').innerHTML = ''; btn.disabled = true;
+  const payload = {
+    archive: [...document.querySelectorAll('.grad:checked')].map(c => +c.dataset.key),
+    cadets: staged.map(c => ({sn: c.sn, name: c.name, bn: c.bn, co: c.co, pl: c.pl, cy: c.cy})),
+    officers: [...document.querySelectorAll('.offAct')].map(sel => ({key: sel.dataset.key, action: sel.value, name: sel.dataset.repName || null, sn: sel.dataset.repSn || null})),
+    newOfficers: newOfficers.map(o => ({name: o.name, sn: o.sn, pos: o.pos, bn: o.bn, co: o.co, pl: o.pl})),
+  };
+  try {
+    const res = await api('POST', YEARLY_URL, payload);
+    finished = true;
+    $('tempPw').innerHTML = (res.tempPasswords || []).length
+      ? `<div class="alert note"><b>Temporary passwords (shown once, copy them now):</b><br>${res.tempPasswords.map(t => `${esc(t.name)} &middot; ${esc(t.serial)} &middot; <code>${esc(t.password)}</code>`).join('<br>')}</div>` : '';
+    doneDlg.showModal();
+    btn.textContent = 'Yearly update confirmed';
+  } catch (err) {
+    $('e4').innerHTML = `<div class="alert err">${esc(err.message)}</div>`; btn.disabled = false;
+  }
 }
 </script>
 @endpush

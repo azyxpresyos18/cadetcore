@@ -1,0 +1,35 @@
+[33m5e2f29b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mremove-sample-data[m[33m, [m[1;31morigin/remove-sample-data[m[33m, [m[1;32mmain[m[33m)[m Remove sample data from views
+ database/seeders/DatabaseSeeder.php           |  13 [32m+[m[31m-[m
+ resources/views/adjutant/attendance.blade.php |  40 [32m++[m[31m---[m
+ resources/views/adjutant/cadets.blade.php     |  58 [32m++++[m[31m---[m
+ resources/views/adjutant/dashboard.blade.php  |  47 [32m+++[m[31m---[m
+ resources/views/adjutant/merits.blade.php     |  26 [32m++[m[31m-[m
+ resources/views/adjutant/reports.blade.php    |  37 [32m+++[m[31m--[m
+ resources/views/adjutant/schedule.blade.php   |   2 [32m+[m[31m-[m
+ resources/views/adjutant/yearly.blade.php     |  54 [32m++++[m[31m---[m
+ resources/views/adjutant/years.blade.php      |  25 [32m+[m[31m--[m
+ resources/views/cadet/attendance.blade.php    |  30 [32m++[m[31m--[m
+ resources/views/cadet/merits.blade.php        |  24 [32m+[m[31m--[m
+ resources/views/layouts/app.blade.php         |   3 [32m+[m[31m-[m
+ resources/views/partials/calendar.blade.php   |  20 [32m+[m[31m--[m
+ resources/views/platoon/attendance.blade.php  |  24 [32m+[m[31m--[m
+ resources/views/platoon/dashboard.blade.php   |  39 [32m+++[m[31m--[m
+ resources/views/platoon/merits.blade.php      |  26 [32m+[m[31m--[m
+ views/adjutant/attendance.blade.php           |  50 [32m++++++[m
+ views/adjutant/cadets.blade.php               | 106 [32m++++++++++++[m
+ views/adjutant/dashboard.blade.php            |  54 [32m+++++++[m
+ views/adjutant/merits.blade.php               |  53 [32m++++++[m
+ views/adjutant/reports.blade.php              |  74 [32m+++++++++[m
+ views/adjutant/schedule.blade.php             |  10 [32m++[m
+ views/adjutant/yearly.blade.php               | 225 [32m++++++++++++++++++++++++++[m
+ views/adjutant/years.blade.php                |  46 [32m++++++[m
+ views/auth/login.blade.php                    |  99 [32m++++++++++++[m
+ views/cadet/attendance.blade.php              |  29 [32m++++[m
+ views/cadet/merits.blade.php                  |  31 [32m++++[m
+ views/cadet/schedule.blade.php                |   8 [32m+[m
+ views/layouts/app.blade.php                   |  47 [32m++++++[m
+ views/partials/calendar.blade.php             | 100 [32m++++++++++++[m
+ views/platoon/attendance.blade.php            |  58 [32m+++++++[m
+ views/platoon/dashboard.blade.php             |  45 [32m++++++[m
+ views/platoon/merits.blade.php                | 109 [32m+++++++++++++[m
+ 33 files changed, 1399 insertions(+), 213 deletions(-)

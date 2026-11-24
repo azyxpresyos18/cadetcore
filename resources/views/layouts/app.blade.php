@@ -2,9 +2,10 @@
   $role = $role ?? trim($__env->yieldContent('role', 'adjutant'));
   $labels = ['adjutant'=>'Corps Adjutant','corps_s1'=>'Corps S1 Personnel Officer','battalion_s1'=>'Battalion S1 Officer','platoon_leader'=>'Platoon Leader','cadet'=>'Cadet'];
   $prefixes = ['adjutant'=>'adjutant','corps_s1'=>'corps','battalion_s1'=>'battalion','platoon_leader'=>'platoon','cadet'=>'cadet'];
-  $pages = ['dashboard'=>'Dashboard','schedule'=>'Training Schedule','merits'=>'Merit / Demerit','cadets'=>'Cadet Records','attendance'=>'Attendance','reports'=>'Reports','yearly'=>'Yearly Update'];
+  $pages = ['dashboard'=>'Dashboard','schedule'=>'Training Schedule','merits'=>'Merit / Demerit','cadets'=>'Cadet Records','officers'=>'Officers','attendance'=>'Attendance','reports'=>'Reports','yearly'=>'Yearly Update'];
   $staff = ['dashboard','schedule','merits','cadets','attendance','reports'];
-  $sets = ['adjutant'=>array_merge($staff, ['yearly']),'corps_s1'=>$staff,'battalion_s1'=>$staff,'platoon_leader'=>['dashboard','schedule','attendance','merits'],'cadet'=>['attendance','schedule','merits']];
+  $corps = ['dashboard','schedule','merits','cadets','officers','attendance','reports'];
+  $sets = ['adjutant'=>array_merge($corps, ['yearly']),'corps_s1'=>$corps,'battalion_s1'=>$staff,'platoon_leader'=>['dashboard','schedule','attendance','merits'],'cadet'=>['attendance','schedule','merits']];
   $roleLabel = $labels[$role]; $name = session('display_name') ?? $labels[$role]; $prefix = $prefixes[$role];
   $nav = [];
   foreach ($sets[$role] as $pg) { $nav[] = [$prefix.'.'.$pg, ($role === 'cadet' && $pg === 'merits') ? 'Merit & Demerit' : $pages[$pg]]; }
@@ -42,6 +43,23 @@
     @yield('content')
   </main>
 </div>
+<script>
+// Small helper used by every page that talks to the backend. Throws an Error with the server's message on failure.
+window.api = async (method, url, body) => {
+  const res = await fetch(url, {
+    method,
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content},
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  let data = {};
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) {
+    const first = data.errors ? Object.values(data.errors).flat()[0] : null;
+    throw new Error(first || data.message || 'Something went wrong. Please try again.');
+  }
+  return data;
+};
+</script>
 @stack('scripts')
 </body>
 </html>

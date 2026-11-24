@@ -15,7 +15,7 @@
 <div class="card"><div class="sum">
   <div><small>MERIT</small><span class="pos">+{{ $merit }}</span></div><span>&minus;</span>
   <div><small>DEMERIT</small><span class="neg">{{ $demerit }}</span></div><span>=</span>
-  <div><small>NET STANDING</small><span class="pos">+{{ $merit - $demerit }}</span></div>
+  <div><small>NET STANDING</small><span class="{{ $merit - $demerit >= 0 ? 'pos' : 'neg' }}">{{ \App\Support\Ctx::net($merit - $demerit) }}</span></div>
 </div></div>
 <div class="tablewrap"><table>
   <thead><tr><th>Entry ID</th><th>Date</th><th>Type</th><th>Points</th><th>Reason / Justification</th><th>Logged by</th></tr></thead>

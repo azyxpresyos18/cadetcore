@@ -13,4 +13,6 @@ class AttendanceRecord extends Model
 
     public function session() { return $this->belongsTo(TrainingSession::class, 'session_id'); }
     public function enrollment() { return $this->belongsTo(Enrollment::class, 'enrollment_id'); }
+
+    public function loggedBy() { return $this->belongsTo(UserAccount::class, 'logged_by_user_id'); }
 }

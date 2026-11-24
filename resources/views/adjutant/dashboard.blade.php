@@ -3,7 +3,7 @@
   // Dashboard data from the backend. The backend passes these; nothing is hardcoded here.
   // $recent : rows of [entry id, date, cadet name, battalion, 'Merit'|'Demerit', signed points e.g. '+8', reason, logged by]
   // $bn     : rows of [battalion name, bar width 0-100, '92 cadets']
-  // $next   : null or ['title'=>, 'date'=>, 'time'=>'06:00 - 11:00', 'venue'=>]
+  // $next   : null or ['title'=>, 'date'=>, 'time'=>'0600H - 1100H', 'venue'=>]
   $yearLabel = $yearLabel ?? null;
   $week = $week ?? null;
   $totalCadets = $totalCadets ?? 0;

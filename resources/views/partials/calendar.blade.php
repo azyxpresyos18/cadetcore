@@ -1,7 +1,8 @@
 {{-- Usage: @include('partials.calendar', ['editable' => true|false]); expects $sessions from the controller. --}}
 @php
-  // $sessions: rows of ['id','date'=>'Y-m-d','title','time'=>'06:00 - 11:00','location','audience','type'], passed by the backend.
+  // $sessions: rows of ['id','date'=>'Y-m-d','title','time'=>'0600H - 1100H','location','audience','type'], passed by the backend.
   $sessions = $sessions ?? [];
+  $audienceOptions = $audienceOptions ?? ['All Cadets'];
 @endphp
 <div class="grid2">
   <div class="card">
@@ -23,10 +24,11 @@
     <h3 id="sessTitle">Add Training Session</h3>
     <label class="f"><span>Session title</span><input id="s_title" required></label>
     <label class="f"><span>Date</span><input type="date" id="s_date" required></label>
-    <label class="f"><span>Time</span><input id="s_time" placeholder="06:00 - 11:00" required></label>
+    <label class="f"><span>Time</span><input id="s_time" placeholder="0600H - 1100H" required></label>
     <label class="f"><span>Location</span><input id="s_loc" required></label>
     <label class="f"><span>Type</span><input id="s_type" maxlength="40" required autocomplete="off"></label>
-    <label class="f"><span>Audience</span><select id="s_aud"><option>All Cadets</option><option>Aspiring Officers</option><option>Regular Cadets</option></select></label>
+    <label class="f"><span>Audience</span><select id="s_aud">@foreach ($audienceOptions as $o)<option>{{ $o }}</option>@endforeach</select></label>
+    <div id="sessErr"></div>
     <div class="dlg-actions"><button type="button" class="btn ghost" style="color:var(--ink);border-color:var(--ink)" onclick="sessDlg.close()">Cancel</button><button class="btn" value="save">Save session</button></div>
   </form>
 </dialog>
@@ -35,6 +37,7 @@
 @push('scripts')
 <script>
 const EDITABLE = @json($editable);
+const BASE = @json(url()->current());
 let sessions = @json($sessions);
 let view = new Date(); view.setDate(1); let selected = null, editingId = null;
 const $ = id => document.getElementById(id);
@@ -86,13 +89,21 @@ if (EDITABLE) {
   window.openAddSession = () => { editingId = null; $('sessTitle').textContent = 'Add Training Session'; $('sessForm').reset(); if (selected) $('s_date').value = selected; sessDlg.showModal(); };
   window.editSession = id => { const s = sessions.find(x => x.id === id); editingId = id; $('sessTitle').textContent = 'Edit Training Session';
     $('s_title').value = s.title; $('s_date').value = s.date; $('s_time').value = s.time; $('s_loc').value = s.location; $('s_type').value = s.type; $('s_aud').value = s.audience; sessDlg.showModal(); };
-  window.removeSession = id => { if (confirm('Remove this session?')) { sessions = sessions.filter(s => s.id !== id); render(); showDetail(); } };
-  $('sessForm').addEventListener('submit', e => {
+  window.removeSession = async id => {
+    if (!confirm('Remove this session?')) return;
+    try { await api('DELETE', `${BASE}/${id}`); sessions = sessions.filter(s => s.id !== id); render(); showDetail(); }
+    catch (err) { alert(err.message); }
+  };
+  $('sessForm').addEventListener('submit', async e => {
     if (e.submitter && e.submitter.value !== 'save') return;
+    e.preventDefault();
     const data = {title:$('s_title').value, date:$('s_date').value, time:$('s_time').value, location:$('s_loc').value, type:$('s_type').value.trim(), audience:$('s_aud').value};
-    if (editingId) Object.assign(sessions.find(s => s.id === editingId), data);
-    else sessions.push({id: Date.now(), ...data});
-    selected = data.date; view = new Date(data.date + 'T00:00'); view.setDate(1); render(); showDetail();
+    $('sessErr').innerHTML = '';
+    try {
+      const saved = editingId ? await api('PUT', `${BASE}/${editingId}`, data) : await api('POST', BASE, data);
+      if (editingId) Object.assign(sessions.find(s => s.id === editingId), saved); else sessions.push(saved);
+      selected = saved.date; view = new Date(saved.date + 'T00:00'); view.setDate(1); render(); showDetail(); sessDlg.close();
+    } catch (err) { $('sessErr').innerHTML = `<div class="alert err">${esc(err.message)}</div>`; }
   });
 }
 render();

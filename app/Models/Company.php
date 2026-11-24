@@ -10,4 +10,6 @@ class Company extends Model
     protected $primaryKey = 'company_id';
     public $timestamps = false;
     protected $guarded = [];
+
+    public function battalion() { return $this->belongsTo(Battalion::class, 'battalion_id'); }
 }

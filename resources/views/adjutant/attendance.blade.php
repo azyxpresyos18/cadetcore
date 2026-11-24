@@ -28,7 +28,7 @@
   <select id="st"><option value="">All status</option><option>Present</option><option>Late</option><option>Excused</option><option>Absent</option></select>
 </div>
 <div class="tablewrap"><table id="tbl">
-  <thead><tr><th>Student No.</th><th>Cadet</th><th>Battalion</th><th>Platoon</th><th>Status</th><th>Time in</th><th>Remarks</th></tr></thead>
+  <thead><tr><th>Serial No.</th><th>Cadet</th><th>Battalion</th><th>Platoon</th><th>Status</th><th>Time in</th><th>Remarks</th></tr></thead>
   <tbody>
   @forelse ($rows as $r)
     <tr><td>{{ $r[0] }}</td><td>{{ $r[1] }}</td><td>{{ $r[2] }}</td><td>{{ $r[3] }}</td>

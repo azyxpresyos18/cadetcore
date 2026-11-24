@@ -87,12 +87,22 @@ const fp = id => document.getElementById(id);
 const resetFp = () => { fp('fpForm').classList.remove('hide'); fp('fpDone').classList.add('hide'); fp('fp_email').value = ''; fp('fp_err').classList.add('hide'); };
 fp('forgotLink').onclick = e => { e.preventDefault(); resetFp(); fp('forgotDlg').showModal(); };
 fp('fpCancel').onclick = fp('fpClose').onclick = () => fp('forgotDlg').close();
-fp('fpSend').onclick = () => {
+fp('fpSend').onclick = async () => {
   const em = fp('fp_email');
   if (!em.value.trim() || !em.checkValidity()) { fp('fp_err').textContent = 'Please enter a valid email address.'; fp('fp_err').classList.remove('hide'); return; }
-  // DEMO ONLY: replace with a POST to Laravel's password reset (Password::sendResetLink).
-  fp('fp_shown').textContent = em.value.trim();
-  fp('fpForm').classList.add('hide'); fp('fpDone').classList.remove('hide');
+  fp('fp_err').classList.add('hide');
+  fp('fpSend').disabled = true;
+  try {
+    const res = await fetch(@json(route('password.email')), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token())},
+      body: JSON.stringify({email: em.value.trim()}),
+    });
+    if (!res.ok) throw new Error(res.status === 429 ? 'Too many requests. Please wait a minute and try again.' : 'Please enter a valid email address.');
+    fp('fp_shown').textContent = em.value.trim();
+    fp('fpForm').classList.add('hide'); fp('fpDone').classList.remove('hide');
+  } catch (err) { fp('fp_err').textContent = err.message; fp('fp_err').classList.remove('hide'); }
+  fp('fpSend').disabled = false;
 };
 </script>
 </body>

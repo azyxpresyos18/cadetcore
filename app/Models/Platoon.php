@@ -10,4 +10,6 @@ class Platoon extends Model
     protected $primaryKey = 'platoon_id';
     public $timestamps = false;
     protected $guarded = [];
+
+    public function company() { return $this->belongsTo(Company::class, 'company_id'); }
 }

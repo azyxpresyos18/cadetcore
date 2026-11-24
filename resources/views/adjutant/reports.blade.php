@@ -58,16 +58,20 @@
 @endsection
 @push('scripts')
 <script>
+const EXPORT_URL = @json(url()->current().'/export');
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 window.openGen = () => { $('derr').innerHTML = ''; genDlg.showModal(); };
 $('rf').addEventListener('submit', e => {
   if (e.submitter && e.submitter.value !== 'save') return;
   if ($('r_to').value < $('r_from').value) { e.preventDefault(); $('derr').innerHTML = '<div class="alert err">The end date must be after the start date.</div>'; return; }
-  // DEMO ONLY: call the real report export here.
+  e.preventDefault();
+  const q = new URLSearchParams({type: $('r_type').value, battalion: $('r_bn').value, from: $('r_from').value, to: $('r_to').value, format: $('r_fmt').value});
+  const url = EXPORT_URL + '?' + q.toString();
   $('out').innerHTML = `<div class="alert ok rep-ok"><span>Report prepared successfully: ${esc($('r_type').value)} (${esc($('r_bn').value)}, ${$('r_from').value} to ${$('r_to').value}).
-    <a href="#" onclick="alert('Connect this button to your report export later.');return false">Download ${$('r_fmt').value}</a></span>
+    <a href="${url}" ${$('r_fmt').value === 'PDF' ? 'target="_blank"' : ''}>${$('r_fmt').value === 'PDF' ? 'Open printable PDF view' : 'Download Excel (.csv)'}</a></span>
     <a href="#" onclick="document.getElementById('out').innerHTML='';return false">Dismiss</a></div>`;
+  genDlg.close();
   $('rf').reset();
 });
 </script>

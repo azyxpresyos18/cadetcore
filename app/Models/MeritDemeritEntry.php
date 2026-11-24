@@ -12,4 +12,6 @@ class MeritDemeritEntry extends Model
     protected $guarded = [];
 
     public function enrollment() { return $this->belongsTo(Enrollment::class, 'enrollment_id'); }
+
+    public function loggedBy() { return $this->belongsTo(UserAccount::class, 'logged_by_user_id'); }
 }

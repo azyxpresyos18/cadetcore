@@ -19,10 +19,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Ranks and cadet types
-        foreach (['Cadet', 'Corporal', 'Sergeant', 'Second Lieutenant', 'First Lieutenant', 'Captain'] as $r) {
+        foreach (['Cadet', 'Corps Adjutant', 'Corps S1 Personnel Officer', 'Battalion S1 Officer', 'Platoon Leader'] as $r) {
             Rank::create(['rank_name' => $r]);
         }
-        foreach (['Basic', 'Advanced', 'Officer'] as $t) {
+        foreach (['Regular Cadet', 'Aspiring Cadet', 'Officer'] as $t) {
             CadetType::create(['type_name' => $t]);
         }
 
@@ -33,16 +33,16 @@ class DatabaseSeeder extends Seeder
 
         // People: [serial, last, first, rank_id, cadet_type_id, year_level]
         $people = [
-            'adjutant'       => ['OFF-0001', 'Santos', 'Maria', 6, 3, 4],
-            'corps_s1'       => ['OFF-0002', 'Reyes', 'Juan', 5, 3, 4],
-            'battalion_s1'   => ['OFF-0003', 'Cruz', 'Ana', 5, 3, 4],
-            'platoon_leader' => ['OFF-0004', 'Garcia', 'Pedro', 4, 3, 3],
+            'adjutant'       => ['OFF-0001', 'Santos', 'Maria', 2, 3, 4],
+            'corps_s1'       => ['OFF-0002', 'Reyes', 'Juan', 3, 3, 4],
+            'battalion_s1'   => ['OFF-0003', 'Cruz', 'Ana', 4, 3, 4],
+            'platoon_leader' => ['OFF-0004', 'Garcia', 'Pedro', 5, 3, 3],
             'cadet'          => ['CDT-0001', 'Dela Cruz', 'Jose', 1, 1, 2],
         ];
 
         $users = [];
         foreach ($people as $role => [$serial, $last, $first, $rank, $type, $level]) {
-            $cadet = Cadet::create(['serial_no' => $serial, 'last_name' => $last, 'first_name' => $first, 'course' => 'BSIS']);
+            $cadet = Cadet::create(['serial_no' => $serial, 'last_name' => $last, 'first_name' => $first, 'course' => 'Bachelor of Science in Information Systems']);
             if ($role !== 'cadet') {
                 Officer::create(['cadet_id' => $cadet->cadet_id, 'officer_serial_no' => $serial]);
             }
@@ -65,7 +65,7 @@ class DatabaseSeeder extends Seeder
         BattalionS1Assignment::create(['battalion_id' => $bn->battalion_id, 'academic_year_id' => $year->academic_year_id, 'user_id' => $users['battalion_s1']->user_id]);
         PlatoonLeaderAssignment::create(['platoon_id' => $pl->platoon_id, 'academic_year_id' => $year->academic_year_id, 'user_id' => $users['platoon_leader']->user_id]);
 
-        // One sample training session for Basic cadets
+        // One sample training session for Regular cadets
         $session = TrainingSession::create([
             'academic_year_id' => $year->academic_year_id, 'posted_by_user_id' => $users['adjutant']->user_id,
             'title' => 'Drill Practice', 'session_date' => '2026-12-05',
